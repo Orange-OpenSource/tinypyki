@@ -1,0 +1,22 @@
+#Setup files
+LICENSE.txt
+README.md
+
+#Maintenance files
+clean.sh
+
+#Tinypyki files
+tinypyki/__init__.py
+tinypyki/change.py
+tinypyki/do.py
+tinypyki/gen.py
+tinypyki/macros.py
+tinypyki/pki.py
+tinypyki/show.py
+
+#Examples
+examples/self-signed.py
+examples/quick-pki.py
+examples/custom-nodes.py
+examples/mass-generation.py
+examples/miscellaneous.py
