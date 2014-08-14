@@ -6,9 +6,9 @@
 
 2. Installation:
 ================
-Create bundle:      $ python setup.py sdist --formats=gztar,bztar
-Install tinypyki:   $ sudo python setup.py install --record files.txt
-Uninstall tinypyki: $ cat files.txt | xargs rm -rf
+- Create bundle:      $ python setup.py sdist --formats=gztar,bztar
+- Install tinypyki:   $ sudo python setup.py install --record files.txt
+- Uninstall tinypyki: $ cat files.txt | xargs rm -rf
 
 3. Getting started:
 ===================
