@@ -170,7 +170,8 @@ tiny.do.renew_crl(pki.nodes["root-ca"], life=10)
 tiny.do.renew_branch(pki.nodes["under-ca"], including=True)
 
 # Resume management after initial creation
-loaded_pki = tiny.do.load("/home/swappy/Desktop/projects/sys-ssl/tinypyki/instances/misc-examples/state")
+save_path = pki.path["state"]
+loaded_pki = tiny.do.load(save_path)
 tiny.show(loaded_pki)
 
 # Create a keystore
