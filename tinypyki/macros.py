@@ -13,7 +13,7 @@ NTYPES     = ("ca",  "u")
 FORMATS    = ("pem", "der")
 
 # Digests
-DIGESTS    = ("md5", "sha1")
+DIGESTS    = ("md5", "sha1", "sha256", "sha384", "sha512")
 
 # Subject creation helper
 SUBJECT    = { "country"      : "/C=",
