@@ -157,6 +157,26 @@ def crllife(node, life=1):
     """
     node.crl_life = int(life) if 1<= int(life) <= node.life else node.crl_life
 
+def crldps(node, crl_dps=None):
+    """Change a node's CRL DPS URI.
+
+    node -- a Node object
+    crl_dps -- string, URI (including the http:// or https:// prefix ) of the CRL distributions points; the string may contain multiple URI separated by commas
+
+    Use this function before generating the csr, cert and crl files.
+    """
+    node.crl_dps = crl_dps.lower() if crl_dps else None
+    
+def ocspuri(node, ocsp_uri=None):
+    """Change a node's OCSP URI.
+
+    node -- a Node object
+    ocsp_uri -- string, URI (including the http:// or https:// prefix ) of the OCSP server; the string may contain multiple URI separated by commas
+
+    Use this function before generating the csr, cert and crl files.
+    """
+    node.ocsp_uri = ocsp_uri.lower() if ocsp_uri else None
+    
 def subj(node, country=None, state=None, city=None, organisation=None, department=None, cn="dilbert.com", email=None):
     """Change a node's subject.
 

@@ -31,6 +31,7 @@ def env(pki):
     crls directory    -- as defined in pki.path["crls"]
     sans file, if any -- as defined in pki.path["sans"]
     index file        -- as defined in pki.path["index"]
+    serial file       -- as defined in pki.path["serial"]
     openssl config    -- as defined in pki.path["config.cnf"]
     state file        -- as defined in pki.path["state"]
 
@@ -71,58 +72,12 @@ def env(pki):
     #     with open(pki.path["serial"], "a") as s_hdlr:
     #         s_hdlr.write("02")
     #         s_hdlr.close()
-    # Create sans file
-    if not os.path.isfile(pki.path["sans"]):
-        with open(pki.path["sans"], "a") as san_hdlr:
-            for node in pki.nodes.values():
-                template  = "[ {0}_ext ]\n\n".format(node.nid)
-                template += "basicConstraints       =  critical,CA:{0},pathlen:{1}\n".format("TRUE" if node.ntype == "ca" else "FALSE",node.pathlen)
-                #  digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign, cRLSign, encipherOnly and decipherOnly
-                #  serverAuth             SSL/TLS Web Server Authentication.
-                #  clientAuth             SSL/TLS Web Client Authentication.
-                #  codeSigning            Code signing.
-                #  emailProtection        E-mail Protection (S/MIME).
-                #  timeStamping           Trusted Timestamping
-                #  msCodeInd              Microsoft Individual Code Signing (authenticode)
-                #  msCodeCom              Microsoft Commercial Code Signing (authenticode)
-                #  msCTLSign              Microsoft Trust List Signing
-                #  msSGC                  Microsoft Server Gated Crypto
-                #  msEFS                  Microsoft Encrypted File System
-                #  nsSGC  
-                # extendedKeyUsage=critical,codeSigning,1.2.3.4          
-                template += "keyUsage               =  {0}\n".format("cRLSign,keyCertSign" if node.ntype == "ca" else "nonRepudiation,digitalSignature,keyEncipherment")
-                template += "subjectKeyIdentifier   =  hash\n"
-                if node.nid != node.issuer:
-                    template += "issuerAltName          =  issuer:copy\n"
-                    # template += "authorityKeyIdentifer  =  keyid,issuer\n"
-                if node.crl_dps:
-                    template += "crlDistributionPoints  =  {0}\n".format(",".join(["URI:" + uri for uri in node.crl_dps.lower().replace(" ", "").split(",")]))
-                if node.san:
-                    ip_idx = dns_idx = uri_idx = email_idx = 1
-                    template          += "subjectAltName         =  @{0}_san\n".format(node.nid)
-                    template          += "\n[ {0}_san ]\n\n".format(node.nid)
-                    for altname in node.san.lower().replace(" ","").split(","):
-                        if altname.startswith("ip"):
-                            template  += "IP.{0:<10} = {1}\n".format(ip_idx, altname.split("=")[-1].strip())
-                            ip_idx    += 1
-                        elif altname.startswith("dns"):
-                            template  += "DNS.{0:<9} = {1}\n".format(dns_idx, altname.split("=")[-1].strip())
-                            dns_idx   += 1
-                        elif altname.startswith("email"):
-                            template  += "email.{0:<7} = {1}\n".format(email_idx, altname.split("=")[-1].strip())
-                            email_idx += 1
-                        elif altname.startswith("uri"):
-                            template  += "URI.{0:<9} = {1}\n".format(uri_idx, altname.split("=")[-1].strip())
-                            uri_idx   += 1
-                        else:
-                            print("\t/!\ [WARNING]\t\tSkipping subject alternative name argument: {0}".format(altname))
-                template              += "\n"
-                san_hdlr.write(template)
-                node.san_id = node.nid + "_ext"
-            san_hdlr.close()
     # Create index file
     if not os.path.isfile(pki.path["index"]):
         open(pki.path["index"], "a").close()
+    # Create serial file
+    if not os.path.isfile(pki.path["serial"]):
+        open(pki.path["serial"], "a").close()
     # Create template config file
     if not os.path.isfile(pki.path["config.cnf"]):
         with open(pki.path["config.cnf"], "a") as c_hdlr:
@@ -209,7 +164,8 @@ def env(pki):
             template += "default_md                  = default\n" 
             template += "crl_extensions              = crl_ext\n"
             template += "database                    = {0}\n\n".format(pki.path["index"])
-              
+            template += "serial                    = {0}\n\n".format(pki.path["serial"])
+            
             # template += "# WARNING, the database entry will be added at the EOF, don't add anything below, use allocated space above\n"
 
             c_hdlr.write(template)
@@ -300,6 +256,59 @@ def csr(node, state=True, verbose=False):
     Since there are limitations in handling .der file formats, the manipulated
     csr is in .pem format. See gen.csrform for format conversion.
     """
+    # Create sans file if it does not exists :  
+    # question: we only need to change sans when adding or modifying a node, this  is used for the csr generation and as such should be performed in csr()
+    with open(node.pki.path["sans"], "a") as san_hdlr:
+      if node._status == "csr" :
+        template  = "[ {0}_ext ]\n\n".format(node.nid)
+        template += "basicConstraints       =  critical,CA:{0},pathlen:{1}\n".format("TRUE" if node.ntype == "ca" else "FALSE",node.pathlen)
+        #  digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign, cRLSign, encipherOnly and decipherOnly
+        #  serverAuth             SSL/TLS Web Server Authentication.
+        #  clientAuth             SSL/TLS Web Client Authentication.
+        #  codeSigning            Code signing.
+        #  emailProtection        E-mail Protection (S/MIME).
+        #  timeStamping           Trusted Timestamping
+        #  msCodeInd              Microsoft Individual Code Signing (authenticode)
+        #  msCodeCom              Microsoft Commercial Code Signing (authenticode)
+        #  msCTLSign              Microsoft Trust List Signing
+        #  msSGC                  Microsoft Server Gated Crypto
+        #  msEFS                  Microsoft Encrypted File System
+        #  nsSGC  
+        # extendedKeyUsage=critical,codeSigning,1.2.3.4          
+        template += "keyUsage               =  {0}\n".format("cRLSign,keyCertSign" if node.ntype == "ca" else "nonRepudiation,digitalSignature,keyEncipherment")
+        template += "subjectKeyIdentifier   =  hash\n"
+        if node.nid != node.issuer:
+          template += "issuerAltName          =  issuer:copy\n"
+          # template += "authorityKeyIdentifer  =  keyid,issuer\n"
+        if node.crl_dps:
+          template += "crlDistributionPoints  =  {0}\n".format(",".join(["URI:" + uri for uri in node.crl_dps.lower().replace(" ", "").split(",")]))
+          print("working on node: "+ node.subj)
+        if node.ocsp_uri:
+          template += "authorityInfoAccess  =  OCSP;{0}\n".format(",".join(["URI:" + uri for uri in node.ocsp_uri.lower().replace(" ","").split(",")]))
+        if node.san:
+          ip_idx = dns_idx = uri_idx = email_idx = 1
+          template          += "subjectAltName         =  @{0}_san\n".format(node.nid)
+          template          += "\n[ {0}_san ]\n\n".format(node.nid)
+          for altname in node.san.lower().replace(" ","").split(","):
+            if altname.startswith("ip"):
+              template  += "IP.{0:<10} = {1}\n".format(ip_idx, altname.split("=")[-1].strip())
+              ip_idx    += 1
+            elif altname.startswith("dns"):
+              template  += "DNS.{0:<9} = {1}\n".format(dns_idx, altname.split("=")[-1].strip())
+              dns_idx   += 1
+            elif altname.startswith("email"):
+              template  += "email.{0:<7} = {1}\n".format(email_idx, altname.split("=")[-1].strip())
+              email_idx += 1
+            elif altname.startswith("uri"):
+              template  += "URI.{0:<9} = {1}\n".format(uri_idx, altname.split("=")[-1].strip())
+              uri_idx   += 1
+            else:
+              print("\t/!\ [WARNING]\t\tSkipping subject alternative name argument: {0}".format(altname))
+        template              += "\n"
+        san_hdlr.write(template)
+        node.san_id = node.nid + "_ext"
+      san_hdlr.close()
+
     cmd  = "{0} req".format(node.pki.path["openssl"])
     cmd += " -new"
     cmd += " -{0}".format(node.csr_digest)

@@ -43,6 +43,7 @@ class PKI():
                        "crls"       : None,
                        "sans"       : None,
                        "index"      : None,
+                       "serial"     : None, 
                        "config.cnf" : None,
                        "state"      : None
                        }
@@ -119,7 +120,8 @@ class Node():
                  cert_digest = None,
                  crl_digest  = None,
                  crl_life    = None,
-                 crl_dps     = None, 
+                 crl_dps     = None,
+                 ocsp_uri    = None,
                  pathlen     = None,
                  sign_list   = None,
                  key_path    = None, 
@@ -148,6 +150,7 @@ class Node():
         .crl_life    -- crl validity in days (default 1), 
                         must be 1 <= crl_life <= crl_life
         .crl_dps     -- crl distribution point(s), a string of comma separated URIs (default None)
+        .ocsp_uri    -- URI of the OCSP responder
         .pathlen     -- path length, the maximum number of hierarchy levels between this node and a leaf,
                         this value is handled automatically and only roots (self-signed) nodes should have it set, 
                         user nodes default to 0
@@ -178,6 +181,7 @@ class Node():
         self.crl_digest  = crl_digest.lower()  if crl_digest  and crl_digest.lower()  in DIGESTS    else "sha1"
         self.crl_life    = int(crl_life)       if crl_life    else 1
         self.crl_dps     = crl_dps             if crl_dps     else None
+        self.ocsp_uri    = ocsp_uri            if ocsp_uri    else None
         self.pathlen     = pathlen             if pathlen     else 0
         self.sign_list   = sign_list           if isinstance(sign_list, list) else [self.nid] if self.nid == self.issuer else []
         self.key_path    = key_path            if key_path    else None
